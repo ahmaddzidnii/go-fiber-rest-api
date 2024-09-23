@@ -3,24 +3,33 @@ package main
 import (
 	"log"
 
-	"github.com/ahmaddzidnii/go-fiber-rest-api/controllers/bookcontroller"
-	"github.com/ahmaddzidnii/go-fiber-rest-api/models"
+	"github.com/goccy/go-json"
+
+	"github.com/ahmaddzidnii/go-fiber-rest-api/config"
+	"github.com/ahmaddzidnii/go-fiber-rest-api/router"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 )
 
+func Setup(app *fiber.App) {
+	// Setup Cors
+	app.Use(cors.New())
+
+	// Init Database
+	config.ConnectDatabase();
+
+	// Setup Router
+	router.SetupRouter(app);
+}
+
 func main() {
-	models.ConnectDatabase();
+	app := fiber.New(fiber.Config{
+		JSONEncoder: json.Marshal,
+		JSONDecoder: json.Unmarshal,
+	});
 
-	app := fiber.New();
+	// Setup
+	Setup(app);
 
-	api := app.Group("/api");	
-	book := api.Group("/books");
-
-	book.Get("/", bookcontroller.Index);
-	book.Get("/:id", bookcontroller.Show);
-	book.Post("", bookcontroller.Create);
-	book.Put("/:id", bookcontroller.Update);
-	book.Delete("/:id", bookcontroller.Delete);
-
-	log.Fatal(app.Listen(":3000"))
+	log.Fatal(app.Listen("127.0.0.1:2000"))
 }

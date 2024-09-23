@@ -3,6 +3,8 @@ package bookcontroller
 import (
 	"errors"
 
+	"github.com/ahmaddzidnii/go-fiber-rest-api/config"
+	"github.com/ahmaddzidnii/go-fiber-rest-api/helpers"
 	"github.com/ahmaddzidnii/go-fiber-rest-api/models"
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
@@ -11,99 +13,80 @@ import (
 
 func Index(c *fiber.Ctx) error {
 	var books []models.Book;
-	result := models.DB.Find(&books);
+	result := config.DB.Find(&books);
 
 	if(result.Error != nil){
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": result.Error.Error(),
-		})
+		return helpers.Response(c, fiber.StatusInternalServerError, result.Error.Error(), nil);
 	}
 
-	return c.JSON(books);
+	return helpers.Response(c, fiber.StatusOK,"Success retrive data", books);
 }
+
 func Show(c *fiber.Ctx) error {
 	id:= c.Params("id");
 	var book models.Book;
 	
-	result := models.DB.First(&book, id);
+	result := config.DB.First(&book, id);
 
 	if(result.Error != nil){
 		if(errors.Is(result.Error,gorm.ErrRecordNotFound)){
-			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
-				"error": "Record not found",
-			})
+			return helpers.Response(c, fiber.StatusNotFound, result.Error.Error(), nil);
 		}
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": result.Error.Error(),
-		})
+
+		return helpers.Response(c, fiber.StatusInternalServerError, "Internal server error", nil);
 	}
 
-	return c.JSON(book);
+	return helpers.Response(c, fiber.StatusOK, "Succses retrive data", book);
 }
+
 func Create(c *fiber.Ctx) error {
 	var book models.Book;
 
 	if err := c.BodyParser(&book); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": err.Error(),
-		})
+		return helpers.Response(c, fiber.StatusBadRequest, err.Error(), nil);
 	}
 	
-	if err := models.DB.Create(&book).Error; err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": err.Error(),
-		})
+	if err := config.DB.Create(&book).Error; err != nil {
+		return helpers.Response(c, fiber.StatusInternalServerError, err.Error(), nil);
 	}
 
-	return c.Status(fiber.StatusCreated).JSON(book)
+	return helpers.Response(c, fiber.StatusCreated, "Succses create data", book);
 }
+
 func Update(c *fiber.Ctx) error {
 	id := c.Params("id");
 
-	existingBook := models.DB.First(&models.Book{}, id);
+	existingBook := config.DB.First(&models.Book{}, id);
 
 	if errors.Is(existingBook.Error, gorm.ErrRecordNotFound) {
-		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
-			"error": "Book not found",
-		})
+		return helpers.Response(c, fiber.StatusNotFound, "Book not found", nil);
 	}
 
 
 	var book models.Book;
 	if err := c.BodyParser(&book); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": err.Error(),
-		})
+		return helpers.Response(c, fiber.StatusBadRequest, err.Error(), nil);
 	}
 
-	if models.DB.Where("id = ?", id).Updates(&book).RowsAffected == 0 {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Failed to update data",
-		})
+	if config.DB.Where("id = ?", id).Updates(&book).RowsAffected == 0 {
+		return helpers.Response(c, fiber.StatusInternalServerError, "Internal server error", nil);
 	}
 
-	return c.JSON(fiber.Map{
-		"message": "Data updated successfully",
-	});
+	return helpers.Response(c, fiber.StatusOK, "Data updated successfully", book);
 }
+
 func Delete(c *fiber.Ctx) error {
 	id := c.Params("id");
 
-	existingBook := models.DB.First(&models.Book{}, id);
+	existingBook := config.DB.First(&models.Book{}, id);
 
 	if errors.Is(existingBook.Error, gorm.ErrRecordNotFound) {
-		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
-			"error": "Book not found",
-		})
+		return helpers.Response(c, fiber.StatusNotFound, "Book not found", nil);
 	}
 
-	if models.DB.Delete(&models.Book{}, id).RowsAffected == 0 {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Failed to delete data",
-		})
+	if config.DB.Delete(&models.Book{}, id).RowsAffected == 0 {
+		return helpers.Response(c, fiber.StatusInternalServerError, "Internal server error", nil);
 	}
 
-	return c.JSON(fiber.Map{
-		"message": "Data deleted successfully",
-	});
+	return helpers.Response(c, fiber.StatusOK, "Succsess delete data", nil);
 }
