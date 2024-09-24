@@ -7,5 +7,6 @@ import (
 
 func GetMe(c *fiber.Ctx) error {
 	user := c.Locals("currentUser").(*helpers.MyJwtClaims)
+
 	return helpers.Response(c, fiber.StatusOK, "Success retrive data", user)
 }

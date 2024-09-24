@@ -6,7 +6,7 @@ type User struct {
 	Username     string `gorm:"type:varchar(300)" json:"username"`
 	Email        string `gorm:"type:varchar(300)" json:"email"`
 	Password     string `gorm:"type:varchar(300)" json:"password"`
-	RefreshToken string `gorm:"type:text" json:"refresh_token"`
+	RefreshToken string `gorm:"type:varchar(300)" json:"refresh_token"`
 }
 
 type Register struct {
@@ -27,4 +27,8 @@ type ResponseRegister struct {
 type Login struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
+}
+
+type Logout struct {
+	UserID uint `json:"user_id"`
 }

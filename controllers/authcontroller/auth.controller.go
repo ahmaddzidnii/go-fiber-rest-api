@@ -1,13 +1,16 @@
-package auth
+package authcontroller
 
 import (
+	"errors"
 	"time"
 
 	"github.com/ahmaddzidnii/go-fiber-rest-api/config"
 	"github.com/ahmaddzidnii/go-fiber-rest-api/helpers"
 	"github.com/ahmaddzidnii/go-fiber-rest-api/models"
+	"github.com/ahmaddzidnii/go-fiber-rest-api/utils"
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v4"
+	"gorm.io/gorm"
 )
 
 func Register(c *fiber.Ctx) error {
@@ -118,32 +121,68 @@ func Login(c *fiber.Ctx) error {
 }
 
 func Renew(c *fiber.Ctx) error {
-	// Get refresh token from cookie
+	// Mendapatkan refresh token dari cookie
 	refresh_token := c.Cookies("refresh_token")
 
-	// Find user by refresh token
+	// mencari user berdasarkan refresh token
 	var user models.User
 	if err := config.DB.Where("refresh_token = ?", refresh_token).First(&user).Error; err != nil {
 		return helpers.Response(c, fiber.StatusUnauthorized, "Unauthorized", nil)
 	}
 
-	// Generate new access token
+	// membuat access token baru
 	access_token, err := helpers.GenerateJWT(&user, jwt.NewNumericDate(time.Now().Add(time.Minute * 2)))
 	if err != nil {
 		return helpers.Response(c, fiber.StatusInternalServerError, err.Error(), nil)
 	}
 
-	// Create cookie
+	// membuat cookie
 	cookie := new(fiber.Cookie)
 	cookie.Name = "access_token"
 	cookie.Value = access_token
 	cookie.HTTPOnly = true
 
-	// Set cookie
+	// mengirimkan cookie
 	c.Cookie(cookie)
 
-	// Return new access token
-	return helpers.Response(c, fiber.StatusOK, "Success renew refresh token", fiber.Map{
+	// mengembalikan response access token yang baru
+	return helpers.Response(c, fiber.StatusOK, "Success renew access token", fiber.Map{
 		"access_token": access_token,
 	})
+}
+
+func Logout(c *fiber.Ctx) error {
+	// Mendapatkan access token dari cookie
+	access_token := c.Cookies("access_token");
+
+	if(access_token == ""){
+		return helpers.Response(c, fiber.StatusUnauthorized, "Unauthorized", nil);
+	}
+
+	cc, err := helpers. ClaimJWT(access_token);
+
+	if(err != nil){
+		return helpers.Response(c, fiber.StatusUnauthorized, "Unauthorized", nil);
+	}
+
+	// Mencari user berdasarkan access token
+	var user models.User;
+	if err := config.DB.Where("id = ?", cc.Id).First(&user).Error; err != nil {
+		if errors.Is(err,gorm.ErrRecordNotFound){
+			return helpers.Response(c, fiber.StatusNotFound, "User not found", nil);
+		}
+
+		return helpers.Response(c, fiber.StatusInternalServerError, "Internal server error", nil);
+	}
+
+	// Menghapus refresh token dari database
+	if err := config.DB.Model(&user).Update("refresh_token", nil).Error; err != nil {
+		return helpers.Response(c, fiber.StatusInternalServerError, "Internal server error", nil);
+	}
+
+	// Menghapus cookie
+	utils.ClearCookies((c), "access_token", "refresh_token");
+
+	// Mengembalikan response logout
+	return helpers.Response(c, fiber.StatusOK, "Success logout", nil)
 }

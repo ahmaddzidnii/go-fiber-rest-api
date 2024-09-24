@@ -1,10 +1,11 @@
 package router
 
 import (
-	"github.com/ahmaddzidnii/go-fiber-rest-api/controllers/auth"
+	"github.com/ahmaddzidnii/go-fiber-rest-api/controllers/authcontroller"
 	"github.com/ahmaddzidnii/go-fiber-rest-api/controllers/bookcontroller"
-	usercontroller "github.com/ahmaddzidnii/go-fiber-rest-api/controllers/user"
-	"github.com/ahmaddzidnii/go-fiber-rest-api/middleware"
+	"github.com/ahmaddzidnii/go-fiber-rest-api/controllers/usercontroller"
+	"github.com/ahmaddzidnii/go-fiber-rest-api/middlewares"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 )
@@ -20,15 +21,16 @@ func SetupRouter(app *fiber.App) {
 
 	// Auth
 	authRoute := api.Group("/auth");
-	authRoute.Post("/register", auth.Register);
-	authRoute.Post("/login", auth.Login);
-	authRoute.Post("/renew", auth.Renew);
+	authRoute.Post("/register", authcontroller.Register);
+	authRoute.Post("/login", authcontroller.Login);
+	authRoute.Get("/renew", authcontroller.Renew);
+	authRoute.Get("/logout", authcontroller.Logout);
 
 	// User
 	user := api.Group("/users")
 
 	// Protected Route
-	user.Use(middleware.AuthMiddleware)
+	user.Use(middlewares.AuthMiddleware)
 	user.Get("/me", usercontroller.GetMe)
 	// user.Post("/", helpers.CreateUser)
 	// user.Patch("/:id", middleware.Protected(), helpers.UpdateUser)

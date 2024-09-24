@@ -1,4 +1,4 @@
-package middleware
+package middlewares
 
 import (
 	"github.com/ahmaddzidnii/go-fiber-rest-api/helpers"
