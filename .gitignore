@@ -20,3 +20,7 @@ logs.txt
 secret.md
 # app.env
 tmp
+
+
+# Environment variables file
+.env
