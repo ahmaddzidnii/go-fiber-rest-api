@@ -14,6 +14,7 @@ type MyJwtClaims struct {
 	FullName string `json:"full_name"`
 	Username string `json:"username"`
 	Email string `json:"email"`
+	Role models.Role `json:"role"`
 	jwt.RegisteredClaims
 }
 
@@ -23,6 +24,7 @@ func GenerateJWT(user *models.User,expiredDate *jwt.NumericDate) (string, error)
 		user.FullName,
 		user.Username,
 		user.Email,
+		user.Role,
 		jwt.RegisteredClaims{
 			ExpiresAt: expiredDate,
 			IssuedAt: jwt.NewNumericDate(time.Now()),

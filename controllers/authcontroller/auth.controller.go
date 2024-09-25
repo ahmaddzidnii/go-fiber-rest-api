@@ -130,6 +130,12 @@ func Renew(c *fiber.Ctx) error {
 		return helpers.Response(c, fiber.StatusUnauthorized, "Unauthorized", nil)
 	}
 
+	_,err := helpers.ClaimJWT(refresh_token);
+
+	if(err != nil){
+		return helpers.Response(c, fiber.StatusUnauthorized, err.Error(), nil);
+	}
+
 	// membuat access token baru
 	access_token, err := helpers.GenerateJWT(&user, jwt.NewNumericDate(time.Now().Add(time.Minute * 2)))
 	if err != nil {
@@ -185,4 +191,25 @@ func Logout(c *fiber.Ctx) error {
 
 	// Mengembalikan response logout
 	return helpers.Response(c, fiber.StatusOK, "Success logout", nil)
+}
+
+func Session(c *fiber.Ctx) error {
+	accsess_token := c.Cookies("access_token");
+
+	if(accsess_token == ""){
+		return helpers.Response(c, fiber.StatusUnauthorized, "Unauthorized", fiber.Map{
+			"session": nil,
+		});
+	}
+	s, err := helpers. ClaimJWT(accsess_token);
+
+	if(err != nil){
+		return helpers.Response(c, fiber.StatusUnauthorized, "Unauthorized", fiber.Map{
+			"session": nil,
+		});
+	}
+
+	return helpers.Response(c, fiber.StatusOK, "Succsess retrieve data", fiber.Map{
+		"session": s,
+	});
 }
