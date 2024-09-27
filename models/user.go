@@ -23,7 +23,8 @@ type User struct {
 	Username     string `gorm:"type:varchar(300)" json:"username"`
 	Email        string `gorm:"type:varchar(300)" json:"email"`
 	Password     string `gorm:"type:varchar(300)" json:"password"`
-	Role         Role   `gorm:"type:enum('student','admin');default:'student'" json:"role"`
+	// Role         Role   `gorm:"type:enum('student','admin');default:'student'" json:"role"`
+	Role         Role   `gorm:"type:varchar(50);default:'student'" json:"role"`
 	RefreshToken string `gorm:"type:text" json:"refresh_token"`
 }
 
