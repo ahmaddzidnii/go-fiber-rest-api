@@ -1,6 +1,6 @@
 module github.com/ahmaddzidnii/go-fiber-rest-api
 
-go 1.22.3
+go 1.12.0
 
 require (
 	github.com/goccy/go-json v0.10.3
